@@ -34,9 +34,14 @@
     (System/arraycopy decompressed 0 output 0 decompressed-size)
     (String. output "UTF-8")))
 
+
 (let [c (market-data)]
-  (loop []
-    (println (:rows (first (:rowsets (cheshire/parse-string (inflater (async/<!! c)) true)))))
-    (recur))
-  (async/close! c))
+  (for [row (:rowsets (cheshire/parse-string (inflater (async/<!! c)) true))]
+    (for [r (:rows row)]
+      (println r))))
+
+(let [c (market-data)]
+  (:columns (cheshire/parse-string (inflater (async/<!! c)) true)))
+
+
 
