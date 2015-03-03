@@ -4,6 +4,8 @@
       <root url="jar://$MAVEN_REPOSITORY$/org/clojure/data.priority-map/0.0.2/data.priority-map-0.0.2.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES />
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/clojure/data.priority-map/0.0.2/data.priority-map-0.0.2-sources.jar!/" />
+    </SOURCES>
   </library>
 </component>

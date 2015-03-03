@@ -6,4 +6,5 @@
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [cheshire "5.4.0"]
                  [org.zeromq/jeromq "0.3.4"]
-                 [org.clojure/core.async "0.1.346.0-17112a-alpha"]])
+                 [org.clojure/core.async "0.1.346.0-17112a-alpha"]
+                 [clojurewerkz/elastisch "2.2.0-beta1"]])
