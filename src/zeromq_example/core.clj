@@ -68,13 +68,13 @@
   (def writer-chan (async/chan 1024))
 
   ;;start streaming market data and writing to file
-  (start market-chan order-chan)
+  (start market-chan writer-chan)
 
   ;;might take a while to stop because the channel might contain data that must be consumed first
-  (stop market-chan order-chan)
+  (stop market-chan writer-chan)
 
   ;; both channels should return nil values after they have been emptied
   (async/<!! market-chan)
-  (async/<!! order-chan))
+  (async/<!! writer-chan))
 
 
