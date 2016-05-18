@@ -61,17 +61,20 @@
   (async/close! m-chan)
   (async/close! o-chan))
 
-(def market-chan (market-data))
-(def order-chan (async/chan 1024))
+(comment "Usage"
+  ;;channel for market feed
+  (def market-chan (market-data))
+  ;;file write channel
+  (def writer-chan (async/chan 1024))
 
+  ;;start streaming market data and writing to file
+  (start market-chan order-chan)
 
-(start market-chan order-chan)
+  ;;might take a while to stop because the channel might contain data that must be consumed first
+  (stop market-chan order-chan)
 
-;;might take a while to stop because the channel might contain data that must be consumed first
-(stop market-chan order-chan)
-
-;; both channels should return nil values after they have been emptied
-(async/<!! market-chan)
-(async/<!! order-chan)
+  ;; both channels should return nil values after they have been emptied
+  (async/<!! market-chan)
+  (async/<!! order-chan))
 
 
