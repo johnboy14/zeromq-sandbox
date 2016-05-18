@@ -11,7 +11,6 @@ Small Application that streams data from EVE Onlines Market Relay [See here](htt
     user=> (def market-chan (market-data)) (def writer-chan (chan 1024))
     
     user=> (start market-chan writer-chan) //writes market data to /tmp/data.txt
-    #<ManyToManyChannel clojure.core.async.impl.channels.ManyToManyChannel@7f6e5211>
 
     user=> (stop market-chan writer-chan) //close both channels
 
