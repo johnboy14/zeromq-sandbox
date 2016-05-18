@@ -1,10 +1,7 @@
 (ns zeromq-example.core
   (:require [clojure.core.async :as async]
-            [cheshire.core :as cheshire]
-            [clojurewerkz.elastisch.rest :as esr]
-            [clojurewerkz.elastisch.rest.document :as esd]
             [clojure.java.io :as io])
-  (:import (org.zeromq ZContext ZMQ))
+  (:import (org.zeromq ZMQ))
   (:import (java.util.zip Inflater)))
 
 (defn market-data []
@@ -29,39 +26,52 @@
     out))
 
 (defn inflater [data]
-  (let [inflater (Inflater.)
-        decompressed (byte-array (* (alength data) 16))
-        _ (.setInput inflater data)
-        decompressed-size (.inflate inflater decompressed)
-        output (byte-array decompressed-size)]
-    (System/arraycopy decompressed 0 output 0 decompressed-size)
-    (String. output "UTF-8")))
+  (when data
+    (let [inflater (Inflater.)
+          decompressed (byte-array (* (alength data) 16))
+          _ (.setInput inflater data)
+          decompressed-size (.inflate inflater decompressed)
+          output (byte-array decompressed-size)]
+      (System/arraycopy decompressed 0 output 0 decompressed-size)
+      (String. output "UTF-8"))))
 
+(defn process-market-data [m-chan o-chan]
+  (async/thread
+    (loop []
+      (if-let [c (inflater (async/<!! m-chan))]
+        (do (async/>!! o-chan c)
+            (recur))
+        (println "Market data channel has been closed!!")))))
+
+
+(defn write-to-file [o-chan filename]
+  (async/thread
+    (with-open [wrt (io/writer filename)]
+      (loop []
+        (if-let [d (async/<!! o-chan)]
+          (do (.write wrt d)
+              (recur))
+          (println "Order Channel has been closed"))))))
+
+(defn start [m-chan o-chan]
+  (process-market-data m-chan o-chan)
+  (write-to-file o-chan "/tmp/data.txt"))
+
+(defn stop [m-chan o-chan]
+  (async/close! m-chan)
+  (async/close! o-chan))
+
+(def market-chan (market-data))
 (def order-chan (async/chan 1024))
 
-(defn process-market-data []
-  (let [c (market-data)]
-    (async/go-loop []
-      (async/>!! order-chan (inflater (async/<!! c)))
-      (recur))))
 
-(defn persist-data []
-  (let [connection (esr/connect)]
-    (async/go-loop []
-      (esd/create connection "emdr" "orders" (async/<!! order-chan)))))
+(start market-chan order-chan)
 
+;;might take a while to stop because the channel might contain data that must be consumed first
+(stop market-chan order-chan)
 
-(defn write-thousand-lines [filename]
-  (with-open [wrt (io/writer filename)]
-    (dotimes [_ 1000]
-      (.write wrt (async/<!! order-chan)))))
-
-;(write-thousand-lines "/Users/e20042/data.txt")
-
-(defn start []
-  (process-market-data)
-  ;(persist-data)
-  (write-thousand-lines "/Users/e20042/data.txt"))
-
+;; both channels should return nil values after they have been emptied
+(async/<!! market-chan)
+(async/<!! order-chan)
 
 
